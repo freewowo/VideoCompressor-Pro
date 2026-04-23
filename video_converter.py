@@ -110,13 +110,14 @@ class VideoConverter:
         if not output:
             output = result.stdout if result.stdout else ""
         import re
-        
+
         # 解析分辨率（支持多种格式）
-        # 格式1: 1920x1080 [SAR 1:1 DAR 16:9]
-        # 格式2: Stream #0:0 ... 1920x1080
-        size_match = re.search(r'Video:\s+.*?(\d+)x(\d+)', output, re.DOTALL)
+        # 格式1: Stream #0:0 ... Video: h264 ... 1920x1080
+        # 格式2: 1920x1080 [SAR 1:1 DAR 16:9]
+        # 注意：不使用 re.DOTALL，确保在单行内匹配
+        size_match = re.search(r'Video:\s+[^\n]*?(\d{2,5})x(\d{2,5})', output)
         if not size_match:
-            size_match = re.search(r'(\d{2,5})x(\d{2,5})', output)
+            size_match = re.search(r'(\d{2,5})x(\d{2,5})\s+\[', output)
         
         width = int(size_match.group(1)) if size_match else 0
         height = int(size_match.group(2)) if size_match else 0
@@ -334,6 +335,14 @@ class VideoConverter:
             else:
                 if log_callback:
                     log_callback(f"转换失败，退出码: {return_code}")
+                    # 输出最后几行 FFmpeg 错误信息
+                    if hasattr(self._process, 'stdout'):
+                        # 尝试读取剩余输出
+                        remaining = self._process.stdout.read()
+                        if remaining:
+                            for line in remaining.strip().split('\n')[-5:]:
+                                if line.strip():
+                                    log_callback(f"  FFmpeg: {line.strip()}")
                 return False
                 
         except Exception as e:
