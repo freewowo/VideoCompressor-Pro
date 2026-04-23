@@ -48,7 +48,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/YOUR_USERNAME/VideoCompressor-Pro.git
+git clone https://github.com/freewowo/VideoCompressor-Pro.git
 cd VideoCompressor-Pro
 
 # 2. 安装依赖
